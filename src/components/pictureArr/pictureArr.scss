@@ -1,0 +1,14 @@
+.img-list {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  min-height: 20px;
+  width: 750rpx;
+  .img-item {
+    flex: 1;
+    .image {
+      display: block;
+      width: 100%;
+    }
+  }
+}

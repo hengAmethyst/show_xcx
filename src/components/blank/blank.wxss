@@ -1,0 +1,9 @@
+.blank{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    font-size:20rpx;
+    color:#000;
+    border:1rpx solid black;
+}

@@ -1,0 +1,16 @@
+.phone{
+        position:fixed;
+        right: 0;
+        bottom:30%;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        width:100rpx;
+        height:100rpx;
+        background:#fff;
+        border-radius:100%;
+}
+.phone image{
+    width:70rpx;
+    height:70rpx;
+}

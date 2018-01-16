@@ -1,0 +1,565 @@
+<template>
+  <view class="edit">
+    <!--log/门头照-->
+    <!--<view class="edit-logo">
+    		<view class="left-word">
+    			门头照/logo
+    		</view>
+    		<image src="{{logo}}" bindtap="chooseLog" />
+    	</view>-->
+    <!--轮播图-->
+    <view class="edit-lunbo">
+      <view class="title">
+        <text>轮播图</text>
+      </view>
+      <view class="add">
+        <view class="pic" wx:for="{{lunBoList}}">
+          <image src="{{item.url}}" class="img" />
+          <image src='../../../img/icon_delete_pic.png' class="delBtn" data-id="{{index}}" bindtap="deleteLunBo" />
+        </view>
+        <view class="addBtn" wx:if="{{lunBoList.length<3}}">
+          <image src='../../../img/image_add_pic.png' bindtap="chooseLunBo" />
+        </view>
+      </view>
+    </view>
+    <!--图片-->
+    <view class="imgs">
+      <view class="title">
+        <text>图片</text>
+      </view>
+      <view class="add">
+        <view class="pic" wx:for="{{pictureList}}">
+          <image src="{{item.url}}" class="img" />
+          <image src='../../../img/icon_delete_pic.png' class="delBtn" data-id="{{index}}" bindtap="deletePic" />
+        </view>
+        <view class="addBtn" wx:if="{{pictureList.length<6}}">
+          <image src='../../../img/image_add_pic.png' bindtap="chooseImg" />
+        </view>
+      </view>
+    </view>
+    <!--餐饮企业介绍-->
+    <view class="headline" wx:for="{{detailList}}">
+      <view class="title">
+        <input placeholder="请输入标题" maxlength="40" value="{{item.title}}" data-id="{{index}}" bindinput="putTitle" />
+        <view class="delBtn" data-id="{{index}}" catchtap="delHeadLine">
+          <image src='../../../img/icon_delete_word.png' />
+        </view>
+      </view>
+      <view class="inner">
+        <textarea placeholder="开始书写" maxlength="300" value="{{item.content}}" data-id="{{index}}" bindinput="putInner"></textarea>
+        <text class="now-words-length">{{item.wordsLength}}/300</text>
+      </view>
+    </view>
+    <!--内容添加按钮-->
+    <view class="add-headline">
+      <view class="btn" bindtap="addHeadline" wx:if="{{showAddBtn}}">
+        + 新增文本模块
+      </view>
+      <view class="btn-forbid" wx:else>
+        最多添加10个
+      </view>
+    </view>
+    <!--完成-->
+    <view class="submit">
+      <view class="btn" bindtap="submit">完成</view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+//引入List、Panel和Counter组件
+import ApiUrl from "../../../api-url";
+
+export default class edit extends wepy.page {
+  //页面配置
+  config = {
+    navigationBarTitleText: "模板编辑"
+  };
+
+  //声明页面中将要使用到的组件
+  components = {};
+
+  //可用于页面模板中绑定的数据
+  data = {
+    logo: "../../../img/icon_logo_default.png",
+    id: null,
+    picList: [],
+    detailList: [],
+    lunBoList: [],
+    pictureList: [],
+    showContentEdit: false,
+    // 当前的id
+    companyId: null,
+    showAddBtn:true//显示不同的按钮.
+  };
+  onLoad() {
+    this.companyId = this.$parent.globalData.companyId;
+    this.getOldInfo(this.companyId);
+  }
+  methods = {
+    //选择轮播图
+    chooseLunBo() {
+      let that = this;
+      let type = 0
+      wx.chooseImage({
+        count: 4, // 默认9
+        success: function(res) {
+          let tempFilePaths = res.tempFilePaths;
+          let tempData = {nowNum:0,allNum:tempFilePaths.length}
+          that.upload(tempData,that.lunBoList,tempFilePaths,type)
+        }
+      })
+    },
+    //选择图片
+    chooseImg() {
+      let that = this
+      let type = 1
+      wx.chooseImage({
+        count: 6, // 默认9
+        success: function(res) {
+          let tempFilePaths = res.tempFilePaths;
+          let tempData = {nowNum:0,allNum:tempFilePaths.length}
+          that.upload(tempData,that.pictureList,tempFilePaths,type)
+        }
+      })
+    },
+    //删除轮播图
+    deleteLunBo(e) {
+      this.lunBoList.splice(e.currentTarget.dataset.id, 1);
+    },
+    //删除图片
+    deletePic(e) {
+      this.pictureList.splice(e.currentTarget.dataset.id, 1);
+    },
+    //添加内容区
+    addHeadline() {
+      if(this.detailList.length<10){
+        this.detailList.push({ title: "", content: "" });
+        if(this.detailList.length==10){
+           this.showAddBtn = false
+        }
+      }
+    },
+    //删除内容区
+    delHeadLine(e) {
+      let that = this
+      wx.showModal({
+        title: '删除提示',
+        content: '是否确定删除该模块',
+        success: function(res) {
+          if (res.confirm) {
+            that.detailList.splice(e.currentTarget.dataset.id, 1);
+            if(that.detailList.length<10){
+              that.showAddBtn = true
+            }
+          } else if (res.cancel) {
+            console.log('用户点击取消')
+          }
+          that.$apply()
+        }
+      })
+    },
+    //完成提交
+    submit() {
+      let that = this;
+      let temp = [];
+      for (let item of this.lunBoList) {
+        temp.push(item);
+      }
+      for (let item of this.pictureList) {
+        temp.push(item);
+      }
+      wx.request({
+        url: ApiUrl.template.edit,
+        data: {
+          param: {
+            companyId: this.companyId,
+            id: this.id,
+            templatePicList: temp,
+            templateDetailList: this.detailList
+          }
+        },
+        method: "POST",
+        header: {
+          "content-type": "application/json" // 默认值
+        },
+        success: function(res) {
+          if(res.data.code == 0){
+            wx.showToast({
+              title: "编辑成功",
+              icon: "success",
+              duration: 1000
+            });
+            that.$root.$parent.globalData.changeDetail = true;
+            console.log(that.$root.$parent.globalData.changeDetail)
+            setTimeout(() => {
+              wx.navigateBack();
+            }, 1000);
+          }
+          else{
+            wx.showToast({
+              title: "提交失败",
+              icon: "error",
+              duration: 1000
+            })
+          }
+        }
+      })
+    }
+  }
+ // 多张图片上传函数
+  upload(picData,itemList,filePathList,type){
+    let that = this
+    wx.uploadFile({
+      url: ApiUrl.file, //仅为示例，非真实的接口地址
+      filePath: filePathList[picData.nowNum] ,
+      name: "file",
+      formData: {
+        user: "test"
+      },
+      success: function(res) {
+        let data = JSON.parse(res.data);
+        let temp = {};
+        temp.isTurnView = type;
+        temp.url = data.data.fullFilename;
+        itemList.push(temp);
+        that.$apply();
+        if(picData.nowNum < picData.allNum-1){
+          picData.nowNum++
+          that.upload(picData,itemList,filePathList,type)
+        }
+        else{
+          console.log('执行完毕')
+          return false
+        }
+      }
+    })
+  }
+
+
+  //输入标题
+  putTitle(e) {
+    let index = e.currentTarget.dataset.id;
+    this.detailList[index].title = e.detail.value;
+    this.$apply();
+  }
+  //输入内容
+  putInner(e) {
+    let index = e.currentTarget.dataset.id;
+    this.detailList[index].content = e.detail.value;
+    this.detailList[index].wordsLength = e.detail.value.length;
+    this.$apply();
+  }
+  //获取已有信息
+  getOldInfo(id) {
+    let that = this;
+    wx.request({
+      url: ApiUrl.template.query,
+      data: {
+        param: {
+          companyId: id
+        }
+      },
+      method: "POST",
+      header: {
+        "content-type": "application/json" // 默认值
+      },
+      success: function(res) {
+        console.log(res,111);
+        if(res.data.data.webTemplate.templatePicList){
+          that.picList = res.data.data.webTemplate.templatePicList;
+        }else{
+          that.picList = []
+        }
+        that.id = res.data.data.webTemplate?res.data.data.webTemplate.id:'';
+        for (let value of that.picList) {
+          if (value.isTurnView == 0) {
+            that.lunBoList.push(value);
+          } else {
+            that.pictureList.push(value);
+          }
+        }
+        if(res.data.data.webTemplate.templateDetailList){
+           that.detailList = res.data.data.webTemplate.templateDetailList;
+        }
+        else{
+          that.detailList = []
+        }
+        // that.detailList = res.data.data.webTemplate.templateDetailList;
+        // 如果没有模板的时候
+        if (that.detailList.length < 1) {
+          that.detailList.push({ title: "", content: "" });
+        }
+        // 如果模板已经达到了10个
+        if(that.detailList.length >=10){
+         that.showAddBtn = false
+        }
+        for (let item of that.detailList) {
+          item.wordsLength = item.content.length;
+        }
+        that.$apply();
+      }
+    });
+  }
+}
+</script>
+<style lang="scss">
+.edit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  background: #eaeff2;
+  /*logo*/
+  .edit-logo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: 200rpx;
+    margin-top: 2rpx;
+    background: #fff;
+    .left-word {
+      margin-left: 30rpx;
+      font-size: 32rpx;
+      font-weight: 600;
+      color: #222222;
+    }
+    image {
+      width: 152rpx;
+      height: 152rpx;
+      margin-right: 40rpx;
+      border-radius: 100%;
+    }
+  }
+  /*轮播*/
+  .edit-lunbo {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 334rpx;
+    margin-top: 3rpx;
+    background: #fff;
+    .title {
+      display: flex;
+      align-items: center;
+      width: 690rpx;
+      height: 107rpx;
+      margin: 0 auto;
+      border-bottom: solid 1rpx #cccccc;
+      text {
+        font-size: 32rpx;
+        font-weight: 600;
+        color: #222;
+      }
+    }
+    .add {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      .pic {
+        position: relative;
+        width: 154rpx;
+        height: 154rpx;
+        margin-left: 30rpx;
+        .img {
+          width: 100%;
+          height: 100%;
+        }
+        .delBtn {
+          position: absolute;
+          top: 0;
+          right: 0;
+          transform: translate(50%, -50%);
+          width: 31rpx;
+          height: 31rpx;
+        }
+      }
+      .addBtn {
+        width: 154rpx;
+        height: 154rpx;
+        margin-left: 25rpx;
+        image {
+          width: 154rpx;
+          height: 154rpx;
+        }
+      }
+    }
+  }
+  /*图片*/
+  .imgs {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-top: 40rpx;
+    background: #fff;
+    .title {
+      display: flex;
+      align-items: center;
+      width: 690rpx;
+      height: 107rpx;
+      margin: 0 auto;
+      border-bottom: solid 1rpx #cccccc;
+      text {
+        font-size: 32rpx;
+        font-weight: 600;
+        color: #222;
+      }
+    }
+    .add {
+      padding-bottom:30rpx;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 20rpx;
+      width: 95%;
+      .pic {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        width: 154rpx;
+        height: 154rpx;
+        margin-left: 30rpx;
+        margin-top: 20rpx;
+        .img {
+          width: 100%;
+          height: 100%;
+        }
+        .delBtn {
+          position: absolute;
+          top: 0;
+          right: 0;
+          transform: translate(50%, -50%);
+          width: 31rpx;
+          height: 31rpx;
+        }
+      }
+      .addBtn {
+        width: 154rpx;
+        height: 154rpx;
+        margin-left: 30rpx;
+        margin-top: 20rpx;
+        image {
+          width: 154rpx;
+          height: 154rpx;
+        }
+      }
+    }
+  }
+  /*添加headline*/
+  .add-headline {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 154rpx;
+    margin-top: 20rpx;
+    background: #fff;
+      // 添加按钮可添加时
+    .btn {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 630rpx;
+      height: 92rpx;
+      font-size: 32rpx;
+      color: #4487f8;
+      background-color: #e3eeff;
+      border: solid 2rpx #b8d2ff;
+      border-radius: 2rpx;
+    }
+      //添加按钮不可添加时
+    .btn-forbid{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 630rpx;
+      height: 92rpx;
+      font-size: 32rpx;
+      color: #fff;
+      background-color: #afb9c8;
+      border: solid 2rpx #afb9c8;
+      border-radius: 2rpx;
+    }
+  }
+  /*标题*/
+  .headline {
+    width: 100%;
+    height: 400rpx;
+    margin-top: 21rpx;
+    background: #fff;
+    .title {
+      margin: 0 auto;
+      position: relative;
+      width: 690rpx;
+      height: 107rpx;
+      border-bottom: 1rpx solid #ccc;
+      input {
+        width: 583rpx;
+        height: 100%;
+        font-size: 32rpx;
+        font-weight: 600;
+        color: #282828;
+      }
+      .delBtn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 107rpx;
+        height: 107rpx;
+        image {
+          width: 34rpx;
+          height: 38rpx;
+          transform: translateX(34rpx);
+        }
+      }
+    }
+    .inner {
+      position: relative;
+      margin: 0 auto;
+      width: 690rpx;
+      height: 267rpx;
+      margin-top: 25rpx;
+      color: #282828;
+      textarea {
+        width: 690rpx;
+        height: 267rpx;
+        font-size: 36rpx;
+      }
+      .now-words-length {
+        position: absolute;
+        right: 0;
+        bottom: 24rpx;
+        font-size: 26rpx;
+        color: #ccc;
+      }
+    }
+  }
+  /*提交*/
+  .submit {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 750rpx;
+    height: 120rpx;
+    margin-top: 50rpx;
+    background: #fff;
+    .btn {
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 650rpx;
+      height: 88rpx;
+      font-size: 36rpx;
+      color: #fff;
+      background: #4487f8;
+      border-radius: 4rpx;
+    }
+  }
+}
+</style>

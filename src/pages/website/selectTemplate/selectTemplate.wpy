@@ -1,0 +1,242 @@
+<template>
+  <view>
+    <image class="img-bg" src="../../../img/image_background.png" />
+    <view class="title">立即开通高级展示版小程序
+      <image class="hot" src="../../../img/icon_hot.png" />
+    </view>
+    <view class="content">
+      <view class="content-item">拥有独立的小程序名称和独立入口</view>
+      <view class="content-item">可在周围五公里内被微信用户搜索到</view>
+      <view class="content-item">可售卖商品：支持微信支付，在线处理您的订单</view>
+      <view class="content-item">一对一售后支持</view>
+    </view>
+    <view class="cantact" @tap="phoneCall">
+      <image class="icon" src="../../../img/icon_phone.png" />联系您的专属顾问
+    </view>
+
+    <view class="title2">开启你的专属微官网</view>
+
+    <view class="select-wrapper">
+      <view class="select-item" @tap="toEdit">
+        <image class="bg" src="../../../img/image_basic_module.jpg" />
+        <view class="select-title">基础版</view>
+        <view class="select-desc">去查看 ></view>
+      </view>
+      <view class="select-item" @tap="toCreate">
+        <image class="bg" src="../../../img/image_custom_module.jpg" />
+        <view class="select-title">进阶版</view>
+        <view class="select-sub">进阶版需登录云平台编辑</view>
+        <view class="select-desc">去查看 ></view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from "wepy";
+
+export default class SelectTemplate extends wepy.page {
+  config = {};
+  data = {
+    userId: null
+  };
+
+  onLoad(options) {
+    let app = this.$parent;
+    // this.userId = this.$parent.globalData.userId;
+    let register = () => {
+      wx.showLoading({
+        title: "加载中"
+      });
+      if (app.globalData.userId) {
+        if (!app.globalData.companyId) {
+          wepy.switchTab({
+            url: "/pages/website/userInfo/userInfo"
+          });
+        }
+      } else {
+        wepy.redirectTo({
+          url: "../register/register"
+        });
+      }
+      wx.hideLoading();
+    };
+    if (app.globalData.nowToken) {
+      register();
+    } else {
+      app.loginReadyCallback = register;
+    }
+  }
+  // onShow() {
+  //   let app = this.$parent;
+  //   if (app.globalData.userId) {
+  //     if (!app.globalData.companyId) {
+  //       wepy.switchTab({
+  //         url: "/pages/website/userInfo/userInfo"
+  //       });
+  //     }
+  //   } else {
+  //     wepy.navigateTo({
+  //       url: "../register/register"
+  //     });
+  //   }
+  // }
+
+  methods = {
+    /**
+    * 跳转编辑页
+     */
+    toEdit() {
+      wepy.navigateTo({
+        url: "../detail/detail"
+      });
+    },
+    /**
+    * 跳转落地页
+     */
+    toCreate() {
+      wepy.navigateTo({
+        url: "../custom/custom"
+      });
+    },
+    /**
+    * 拨号
+     */
+    phoneCall() {
+      wepy.makePhoneCall({
+        phoneNumber: "4006858188"
+      });
+    }
+  };
+}
+</script>
+
+<style lang="scss">
+page {
+  height: 0;
+}
+.img-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 750rpx;
+  height: 480rpx;
+}
+.title {
+  margin: 80rpx auto 22rpx;
+  height: 65rpx;
+  line-height: 65rpx;
+  font-size: 46rpx;
+  font-weight: 500;
+  color: #fff;
+  text-align: center;
+  .hot {
+    width: 58rpx;
+    height: 32rpx;
+  }
+}
+.content {
+  margin-bottom: 109rpx;
+  padding-left: 89rpx;
+  height: 152rpx;
+  .content-item {
+    position: relative;
+    line-height: 38rpx;
+    font-size: 26rpx;
+    color: #fff;
+    z-index: 1;
+    &::after {
+      content: "";
+      display: block;
+      position: absolute;
+      left: -18rpx;
+      top: 15rpx;
+      width: 8rpx;
+      height: 8rpx;
+      border-radius: 50%;
+      background: #fff;
+      z-index: 10;
+    }
+  }
+}
+.cantact {
+  margin: 0 auto 70rpx;
+  width: 363rpx;
+  height: 70rpx;
+  text-align: center;
+  line-height: 70rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #fff;
+  background-color: #4487f8;
+  border-radius: 35rpx;
+  .icon {
+    vertical-align: top;
+    margin-top: 21rpx;
+    margin-right: 15rpx;
+    width: 27rpx;
+    height: 27rpx;
+  }
+}
+.title2 {
+  margin: 0 auto 30rpx;
+  width: 378rpx;
+  height: 59rpx;
+  line-height: 56rpx;
+  text-align: center;
+  color: #000102;
+  font-size: 42rpx;
+  font-weight: 500;
+}
+.select-wrapper {
+  display: flex;
+  flex-direction: row;
+  .select-item {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+    .bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 375rpx;
+      height: 375rpx;
+      z-index: -1;
+    }
+    .select-title {
+      margin-top: 75rpx;
+      margin-bottom: 115rpx;
+      height: 65rpx;
+      line-height: 65rpx;
+      color: #fff;
+      font-weight: 600;
+      font-size: 46rpx;
+      width: 100%;
+      text-align: center;
+    }
+    .select-desc {
+      height: 42rpx;
+      line-height: 42rpx;
+      color: #fff;
+      font-weight: 500;
+      font-size: 30rpx;
+      width: 100%;
+      text-align: center;
+    }
+    .select-sub {
+      position: absolute;
+      left: 50%;
+      top: 140rpx;
+      margin-left: -130rpx;
+      width: 260rpx;
+      height: 28rpx;
+      line-height: 28rpx;
+      color: #fff;
+      font-size: 20rpx;
+      text-align: center;
+      z-index: 10;
+    }
+  }
+}
+</style>
